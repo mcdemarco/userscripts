@@ -7,10 +7,13 @@
 // @include https://www.pinterest.com/* 
 // @match http://www.pinterest.com/* 
 // @match https://www.pinterest.com/* 
-// @version 2015-02-17
+// @version 2015-02-27
 // @copyright	mcdemarco
 // @run-at document-end
 // @grant none 
 // ==/UserScript==
 
 document.getElementsByClassName("BannerDownloadApp")[0].style.display = 'none';
+setTimeout(function() {
+    document.getElementsByClassName("stayInBrowserLink")[0].click();
+}, 1000);
