@@ -184,12 +184,16 @@
 
   function searchAndDestroy()
   {
-		var i, elements = document.querySelectorAll('body *');
-		//remove sticky bar.
+		var i, elements = document.querySelectorAll('body div[data-root-margin="search-improvements-bar"]');
+		//remove sticky bars.  don't need to check for sticky anymore but do.
 		for (i = 0; i < elements.length; i++) {
 			if (getComputedStyle(elements[i]).position === 'sticky') {
 				elements[i].parentNode.removeChild(elements[i]);
 			}
+		}
+		elements = document.querySelectorAll('body div[role="tablist"]');
+		for (i = 0; i < elements.length; i++) {
+			elements[i].parentNode.remove();
 		}
 
     debugLog(">>> searching and destroying");
