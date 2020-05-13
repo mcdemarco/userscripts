@@ -195,6 +195,10 @@
 		for (i = 0; i < elements.length; i++) {
 			elements[i].parentNode.remove();
 		}
+		elements = document.querySelectorAll('div.fixedHeader');
+		for (i = 0; i < elements.length; i++) {
+			elements[i].remove();
+		}
 
     debugLog(">>> searching and destroying");
     const grid = findGrid();
