@@ -2,7 +2,7 @@
 // @name        Pinterest - Remove Unwanted Pins
 // @namespace   valacar.pinterest.remove-picked-for-you
 // @author      mcd
-// @version     0.9.1
+// @version     0.9.2
 // @description Remove unwanted pins on Pinterest, like Promoted pins, Product pins, and Ideas for you.
 // @include     https://*.pinterest.tld/*
 // @exclude     /^https://(help|blog|about|buisness|developers|engineering|careers|policy|offsite)\.pinterest/
@@ -59,7 +59,8 @@
       data.promoter ||
       pin.querySelector('[data-test-id="one-tap-desktop"]') ||
       pin.querySelector('[data-test-id="one-tap-desktop-carousel"]') ||
-      pin.querySelector('[data-test-id="oneTapPromotedPin"]');
+      pin.querySelector('[data-test-id="oneTapPromotedPin"]') || 
+      pin.querySelector('[data-test-id="pinrep-video"]');
     if (result) debugLog("--- removed PROMOTED pin:", data.domain);
     return result;
   }
