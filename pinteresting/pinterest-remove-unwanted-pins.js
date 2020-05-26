@@ -2,326 +2,273 @@
 // @name        Pinterest - Remove Unwanted Pins
 // @namespace   valacar.pinterest.remove-picked-for-you
 // @author      valacar
+// @version     0.8.4
 // @description Remove unwanted pins on Pinterest, like "Promoted", "Sponsored", "Picked for you"
-// @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/$/
-// @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/(categories|pin|discover)/.*$/
-// @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/search/pins/.*$/
-// @version     0.4.8
+// @include     https://*.pinterest.tld/*
+// @exclude     /^https://(help|blog|about|buisness|developers|engineering|careers|policy|offsite)\.pinterest/
 // @grant       none
-// @compatible  firefox Firefox with GreaseMonkey
-// @compatible  chrome Chrome with TamperMonkey
+// @noframes
+// @license     MIT
+// @compatible  firefox Firefox
+// @compatible  chrome Chrome
 // ==/UserScript==
 
-const DEBUGGING = false;
+(function() {
+  "use strict";
 
-function appendStyle(cssString)
-{
-    "use strict";
-    var head = document.getElementsByTagName("head")[0];
-    if (head)
-    {
-        var style = document.createElement("style");
-        style.setAttribute("type", "text/css");
-        style.textContent = cssString;
-        head.appendChild(style);
-        return style;
+  const DEBUGGING = 1;
+
+  // allow debugging keys without logging messages
+  const ENABLE_KEYS = 0; // r = reveal (unhide), s = search (find and hide)
+
+  const badStoryType = [
+    "real_time_boards", // ideas for you
+    "BUBBLE_TRAY_CAROUSEL", // ideas you might love
+    "PINART_INTEREST", // topics for you
+    "single_column_recommended_board",
+    "recommended_searches" // searches to try
+  ];
+
+  const badStoryTypeSet = new Set(badStoryType);
+
+  const hidePinClass = "unwanted";
+
+  let cachedHandler;
+  let cachedGrid;
+
+  /* ---------------------------- */
+
+  function appendStyle(cssString)
+  {
+    const parent = document.head || document.documentElement;
+    if (parent) {
+      const style = document.createElement("style");
+      style.setAttribute("type", "text/css");
+      style.textContent = cssString;
+      parent.appendChild(style);
     }
-    return null;
-}
+  }
 
-appendStyle(`
-    [badpin] { display: none; }
-`);
+  appendStyle(`.${hidePinClass} { visibility: hidden !important; }`);
 
-function debugLog()
-{
-    "use strict";
-    if (DEBUGGING)
-    {
-        Function.apply.call(console.log, console, arguments);
-    }
-}
+  const debugLog = DEBUGGING ? console.log.bind(console, "[unwanted]") : function() {};
 
-/* https://jsperf.com/startswith2/32 */
-function startsWith(needle, haystack)
-{
-    "use strict";
-    for (var i = 0, currentChar; i < needle.length; i++)
-    {
-        currentChar = haystack[i];
-        if (needle[i] !== haystack[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
+  function isPromotedPin(data, pin)
+  {
+    let result = (data.is_promoted && data.is_promoted === true) ||
+      data.promoter ||
+      pin.querySelector('[data-test-id="oneTapPromotedPin"]');
+    if (result) debugLog("--- removed PROMOTED pin:", data.domain);
+    return result;
+  }
 
-function testCreditName(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".creditName");
-    if (node)
-    {
-        var text = node.textContent.toLowerCase();
-        if (startsWith("promoted by", text) ||
-            startsWith("ideas for you", text))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-function testCreditItem(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".creditItem");
-    if (node)
-    {
-        var text = node.textContent.toLowerCase();
-        if (startsWith("promoted by", text) ||
-            startsWith("ideas for you", text))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-function testCreditFooter(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".creditFooter");
-    if (node)
-    {
-        var text = node.textContent.toLowerCase();
-        if (startsWith("ideas for you", text) ||
-            startsWith("topics for you", text))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-function testPinMetaWrapper(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".pinMetaWrapper");
-    var text = "";
-    if (node)
-    {
-        text = node.textContent;
-        // search for dollar sign (commerce pin)
-        if (text.indexOf("$") !== -1)
-        {
-            return true;
-        }
-
-        // also check sibling of .pinMeta
-        var pinMetaSibNode = node.querySelector(".pinMeta + div");
-        if (pinMetaSibNode)
-        {
-            text = pinMetaSibNode.textContent;
-            if (text.startsWith("Ad"))
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function testVideo(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".playIndicatorPill");
-    if (node)
-    {
-        return true;
-    }
-    return false;
-}
-
-function testCarousel(pinBaseNode)
-{
-    "use strict";
-    var node = pinBaseNode.querySelector(".ExploreCarouselRep");
-    if (node)
-    {
-        return true;
-    }
-    return false;
-}
-
-function modifyBadPin(pin)
-{
-    "use strict";
-    var testFn = [testCreditName,
-                  testCreditItem,
-                  testCreditFooter,
-                  testPinMetaWrapper,
-                  testVideo,
-                  testCarousel];
-
-    // call all functions in testFn array to test for bad pins
-    for (var i = 0; i < testFn.length; ++i)
-    {
-        var f = testFn[i];
-        var result = f(pin); // call function from array
-        if (result)
-        {
-            // pin.remove();
-            pin.setAttribute("badPin", "badPin");
-            return;
-        }
-    }
-}
-
-function findGrid()
-{
-    "use strict";
-    var result = null;
-
-    // Check for one of those random named grids, by finding the last
-    // .Pin.Module and then walking backwards to find the closest
-    // data-grid-item attribute, and then its parent
-    var lastPin = null;
-    // TODO: don't use document as base node.  add function param?
-    var x = document.querySelectorAll(".Pin.Module:not(.detailed)");
-    if (x.length)
-    {
-        lastPin = x[x.length - 1];  // last pin because there can be multiple grids, and we want the last grid
-        debugLog("::: Found last .Pin.Module (%d) %o", x.length, lastPin);
-        var y = lastPin.closest("[data-grid-item]");
-        if (y)
-        {
-            debugLog("::: Found closest data-grid-item", y);
-            var gridItemParent = y.parentNode;
-            if (gridItemParent)
-            {
-                debugLog("::: Found grid %o", gridItemParent);
-                result = gridItemParent;
-            }
-        }
-        else
-        {
-            debugLog("!!! Can't find closest data-grid-item");
-        }
-    }
-    else
-    {
-        debugLog("!!! Can't find .Pin.Module");
+  function isIdeaPin(data)
+  {
+    let result = data.type
+      && data.type === "story"
+      && badStoryTypeSet.has(data.story_type);
+    if (result) {
+      debugLog("--- removed IDEAS/TOPIC for you pin", data.story_type);
     }
     return result;
-}
+  }
 
-function searchAndDestroy()
-{
-    "use strict";
-    var grid = findGrid();
-
-    if (grid)
-    {
-        // debugLog(grid);
-        // var gridItems = grid.querySelectorAll(".item");
-        var gridItems = grid.querySelectorAll("[data-grid-item]");
-        // if (!gridItems.length)
-        // {
-        //     gridItems = grid.querySelectorAll(".absolute");
-        // }
-        debugLog("    Found %d grid items", gridItems.length);
-        gridItems.forEach(function(x) {
-            modifyBadPin(x);
-        });
+  function isCommercePin(data)
+  {
+    let result = (data.shopping_flags && data.shopping_flags.length > 0)
+      || data.buyable_product;
+    if (result) {
+      debugLog("--- removed COMMERCE pin:",
+        data.domain,
+        data.buyable_product ? "(buyable)" : "");
     }
-}
+    return result;
+  }
 
-/* jshint ignore:start */
-// expose these functions (while debugging) so I can use them in the developer console
-if (DEBUGGING)
-{
-    unsafeWindow.modifyBadPin = this.modifyBadPin;
-    unsafeWindow.findGrid = this.findGrid;
-    unsafeWindow.searchAndDestroy = this.searchAndDestroy;
-}
-/* jshint ignore:end */
+  function getEventHandler(pin)
+  {
+    return Object.keys(pin).find(
+      prop => prop.startsWith("__reactEventHandlers")
+    );
+  }
 
-// Simplify creating a Mutation Observer (from document root)
-function createObserver(target, callbackFunction, rules)
-{
-    "use strict";
-    function getOptionsAsString(options)
-    {
-        var result = '';
-        for (let k of Object.keys(options))
-        {
-            // XXX: this is wrong when using attribute filter array
-            if (options[k]) {
-                result += k + " ";
-            }
+  function getPinData(pin)
+  {
+    let handler = cachedHandler || getEventHandler(pin);
+    if (!handler) {
+      return false;
+    }
+    cachedHandler = handler;
+    let data;
+    let target;
+    try {
+      if (pin.hasAttribute("data-grid-item") || pin.classList.contains("Collection-Item")) {
+        target = pin;
+        data = target[handler].children.props.data;
+        if (data && "data-test-id" in data) {
+          return data;
         }
-        return result.trim();
+        target = pin.firstChild;
+        if (target) {
+          data = target[handler].children.props.data;
+          if (data && "data-test-id" in data) {
+            return data;
+          }
+        }
+        while (target) {
+        target = target.firstChild;
+        if (target) {
+          data = target[handler].children.props.data;
+          if (data && "data-test-id" in data) {
+            return data;
+          }
+          data = target[handler].children[0].props.data;
+          if (data && "data-test-id" in data) {
+            return data;
+          }
+        }
+        }  
+      }
     }
+    catch(err) {
+      debugLog("::: Error getting pin data for pin");		
+    }
+  }
 
-    var MutationObserver = window.MutationObserver ||
-                           window.WebKitMutationObserver ||
-                           window.MozMutationObserver;
-    var targetElement;
-    var selector = "dynamic grid";
-    if (typeof target === "string")
-    {
-        selector = target;
-        targetElement = document.querySelector(target);
+  function isBadPin(pin)
+  {
+    let data = getPinData(pin);
+    if (!data) {
+        debugLog("::: No data found for pin");	
+      return false;
     }
-    else
-    {
-        // XXX: assume it's an element for now
-        targetElement = target;
-        debugLog(targetElement);
+    if (isCommercePin(data) || isPromotedPin(data, pin) || isIdeaPin(data) ) {
+      return true;
     }
+  }
 
-    if (targetElement && MutationObserver)
-    {
-        debugLog("::: observer for %s created, with rules (%s)", selector, getOptionsAsString(rules));
-        var observer = new MutationObserver(callbackFunction);
-        observer.observe(targetElement, rules);
+  function modifyBadPin(pin)
+  {
+    if (isBadPin(pin)) {
+      pin.classList.add(hidePinClass);
     }
-    else
-    {
-        debugLog("::: %s not found while creating observer", selector);
-    }
-}
+  }
 
-if (DEBUGGING)
-{
-    window.addEventListener("keydown", function (event) {
-        'use strict';
+  function processPins(pins)
+  {
+    debugLog("::: Processing", pins.length, "pins");
+    for (let i = 0, len = pins.length; i < len; ++i) {
+      modifyBadPin(pins[i]);
+    }
+  }
+
+  function findGrid()
+  {
+    if (cachedGrid && cachedGrid.isConnected) {
+      return cachedGrid;
+    }
+    const gridItems = document.querySelectorAll("[data-grid-item], .Collection-Item");
+    if (!gridItems.length) {
+      debugLog("!!! Can't find data-grid-item");
+      return null;
+    }
+    const gridItemParent = gridItems[0].parentNode;
+    if (gridItemParent) {
+      debugLog("### Found grid:", gridItemParent);
+      cachedGrid = gridItemParent;
+      processPins(gridItems);
+      return gridItemParent;
+    }
+  }
+
+  function searchAndDestroy()
+  {
+    debugLog(">>> searching and destroying");
+    const grid = findGrid();
+    if (grid) {
+      const gridItems = grid.querySelectorAll("[data-grid-item], .Collection-Item");
+      processPins(gridItems);
+    }
+  }
+
+  function mutationCallback(mutations)
+  {
+    findGrid();
+    for (let mutation of mutations) {
+      for (let i = 0, len = mutation.addedNodes.length; i < len; ++i) {
+        let added = mutation.addedNodes[i];
+        if (added.nodeType === Node.ELEMENT_NODE) {
+          if (added.hasAttribute("data-grid-item") || added.classList.contains("Collection-Item")) {
+            modifyBadPin(added);
+          }
+        }
+      }
+    }
+  }
+
+  // Simplify creating a Mutation Observer (from document root)
+  function createObserver(target, callbackFunction, rules)
+  {
+    let targetElement;
+    if (typeof target === "string") {
+      targetElement = document.querySelector(target);
+    } else {
+      // XXX: assume it's an element for now
+      targetElement = target;
+      debugLog(targetElement);
+    }
+    if (targetElement) {
+      const observer = new MutationObserver(callbackFunction);
+      observer.observe(targetElement, rules);
+      debugLog("::: Observer for %s created", target);
+    } else {
+      debugLog("::: %s not found while creating observer", target);
+    }
+  }
+
+  if (DEBUGGING || ENABLE_KEYS) {
+    window.addEventListener("keydown",
+      function(event) {
         if (event.defaultPrevented ||
-            /(input|textarea)/i.test(document.activeElement.nodeName)) { return; }
+            /(input|textarea)/i.test(document.activeElement.nodeName) ||
+            document.activeElement.matches('[role="textarea"]'))
+        {
+          return;
+        }
         switch (event.key) {
-            case "s":
-            /* fall through */
-            case "S":
-                debugLog("%cSearch and destroy!",
-                         "color: #fff; background-color: #600; font-weight: bold; display: block;");
-                searchAndDestroy();
-                break;
-            default:
-                return;
+          case "s": // find grid and hide unwanted pins
+            searchAndDestroy();
+            debugLog(
+              "%cSearch and destroy!",
+              "color: #fff; background: #600; font-weight: bold; display: block;"
+            );
+            break;
+          case "r": // temporary restore hidden pins
+            document
+              .querySelectorAll(`.${hidePinClass}`)
+              .forEach(pin => {
+                pin.classList.remove(hidePinClass);
+              });
+            break;
+          default:
+            return;
         }
         event.preventDefault();
-    }, true);
-}
+      },
+      true
+    );
+  }
 
-function onAppBase()
-{
-    'use strict';
+  window.addEventListener("load", () => {
+    createObserver(".mainContainer", mutationCallback, {
+      childList: true,
+      subtree: true
+    });
     searchAndDestroy();
-}
+  });
 
-createObserver(".App.AppBase", onAppBase, {childList: true, subtree: true});
+  window.addEventListener("DOMContentLoaded", () => {
+    searchAndDestroy();
+  });
 
-searchAndDestroy();
+})();
