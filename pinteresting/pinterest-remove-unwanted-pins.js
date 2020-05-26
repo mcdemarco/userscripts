@@ -2,8 +2,8 @@
 // @name        Pinterest - Remove Unwanted Pins
 // @namespace   valacar.pinterest.remove-picked-for-you
 // @author      valacar
-// @version     0.8.4
-// @description Remove unwanted pins on Pinterest, like "Promoted", "Sponsored", "Picked for you"
+// @version     0.8.5
+// @description Remove unwanted pins on Pinterest, like Promoted pins, Product pins, and Ideas for you.
 // @include     https://*.pinterest.tld/*
 // @exclude     /^https://(help|blog|about|buisness|developers|engineering|careers|policy|offsite)\.pinterest/
 // @grant       none
@@ -16,7 +16,7 @@
 (function() {
   "use strict";
 
-  const DEBUGGING = 1;
+  const DEBUGGING = 0;
 
   // allow debugging keys without logging messages
   const ENABLE_KEYS = 0; // r = reveal (unhide), s = search (find and hide)
@@ -57,6 +57,7 @@
   {
     let result = (data.is_promoted && data.is_promoted === true) ||
       data.promoter ||
+      pin.querySelector('[data-test-id="one-tap-desktop"]') ||
       pin.querySelector('[data-test-id="oneTapPromotedPin"]');
     if (result) debugLog("--- removed PROMOTED pin:", data.domain);
     return result;
@@ -96,53 +97,52 @@
   {
     let handler = cachedHandler || getEventHandler(pin);
     if (!handler) {
+      debugLog("!!! can't find React event handler");
       return false;
     }
     cachedHandler = handler;
+    //debugLog("::: found react event handler", handler);
     let data;
     let target;
     try {
       if (pin.hasAttribute("data-grid-item") || pin.classList.contains("Collection-Item")) {
         target = pin;
         data = target[handler].children.props.data;
-        if (data && "data-test-id" in data) {
+        if (data && "id" in data) {
           return data;
         }
         target = pin.firstChild;
         if (target) {
           data = target[handler].children.props.data;
-          if (data && "data-test-id" in data) {
+          if (data && "id" in data) {
             return data;
           }
         }
-        while (target) {
-        target = target.firstChild;
+        target = pin.firstChild.firstChild;
         if (target) {
           data = target[handler].children.props.data;
-          if (data && "data-test-id" in data) {
+          if (data && "id" in data) {
             return data;
           }
           data = target[handler].children[0].props.data;
-          if (data && "data-test-id" in data) {
+          if (data && "id" in data) {
             return data;
           }
         }
-        }  
+      } else {
+        debugLog("!!! couldn't find [data-grid-item] or .Collection-Item");
       }
     }
     catch(err) {
-      debugLog("::: Error getting pin data for pin");		
+      debugLog("!!! Caught error:", err);
     }
   }
 
   function isBadPin(pin)
   {
     let data = getPinData(pin);
-    if (!data) {
-        debugLog("::: No data found for pin");	
-      return false;
-    }
-    if (isCommercePin(data) || isPromotedPin(data, pin) || isIdeaPin(data) ) {
+    if (!data) return false;
+    if (isPromotedPin(data, pin) || isIdeaPin(data) ) {
       return true;
     }
   }
@@ -169,7 +169,7 @@
     }
     const gridItems = document.querySelectorAll("[data-grid-item], .Collection-Item");
     if (!gridItems.length) {
-      debugLog("!!! Can't find data-grid-item");
+      debugLog("!!! Can't find [data-grid-item] or .Collection-Item");
       return null;
     }
     const gridItemParent = gridItems[0].parentNode;
@@ -220,9 +220,9 @@
     if (targetElement) {
       const observer = new MutationObserver(callbackFunction);
       observer.observe(targetElement, rules);
-      debugLog("::: Observer for %s created", target);
+      debugLog("::: Observer created for", target);
     } else {
-      debugLog("::: %s not found while creating observer", target);
+      debugLog("::: Couldn't create observer for", target);
     }
   }
 
@@ -231,17 +231,15 @@
       function(event) {
         if (event.defaultPrevented ||
             /(input|textarea)/i.test(document.activeElement.nodeName) ||
-            document.activeElement.matches('[role="textarea"]'))
-        {
+            document.activeElement.matches('[role="textarea"]') ||
+            document.activeElement.matches('[role="textbox"]')
+        ) {
           return;
         }
         switch (event.key) {
           case "s": // find grid and hide unwanted pins
             searchAndDestroy();
-            debugLog(
-              "%cSearch and destroy!",
-              "color: #fff; background: #600; font-weight: bold; display: block;"
-            );
+            debugLog("::: Search and destroy!");
             break;
           case "r": // temporary restore hidden pins
             document
