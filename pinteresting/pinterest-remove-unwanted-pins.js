@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        Pinterest - Remove Unwanted Pins
 // @namespace   valacar.pinterest.remove-picked-for-you
-// @author      valacar
-// @version     0.8.6.mcd
+// @author      mcd
+// @version     0.9.1
 // @description Remove unwanted pins on Pinterest, like Promoted pins, Product pins, and Ideas for you.
 // @include     https://*.pinterest.tld/*
 // @exclude     /^https://(help|blog|about|buisness|developers|engineering|careers|policy|offsite)\.pinterest/
@@ -23,13 +23,10 @@
 
   const badStoryType = [
     "real_time_boards", // ideas for you
-    "BUBBLE_ONE_COL", // ideas for you
     "BUBBLE_TRAY_CAROUSEL", // ideas you might love
     "PINART_INTEREST", // topics for you
     "single_column_recommended_board",
-    "recommended_searches", // searches to try
-    "RECOMMENDED_TOPICS",
-    "explore_board_ideas" // new ideas for your board
+    "recommended_searches" // searches to try
   ];
 
   const badStoryTypeSet = new Set(badStoryType);
@@ -61,8 +58,9 @@
     let result = (data.is_promoted && data.is_promoted === true) ||
       data.promoter ||
       pin.querySelector('[data-test-id="one-tap-desktop"]') ||
+      pin.querySelector('[data-test-id="one-tap-desktop-carousel"]') ||
       pin.querySelector('[data-test-id="oneTapPromotedPin"]');
-    if (result) debugLog("--- removed PROMOTED pin:", data.domain || "unknown domain");
+    if (result) debugLog("--- removed PROMOTED pin:", data.domain);
     return result;
   }
 
@@ -77,31 +75,13 @@
     return result;
   }
 
-  function hasPriceTagIcon(pin)
+  function isCommercePin(data)
   {
-    const paths = pin.querySelectorAll('path');
-    for (let path of paths) {
-      if (path && path.hasAttribute('d')) {
-        // check the first few curves and lines of the svg icon (hopefully unique)
-        if (path.attributes.d.textContent.startsWith(
-          'M6 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m7.36-6.2l8.84 8.84'
-        ))
-        {
-          debugLog("::: price tag icon found");
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function isCommercePin(data, pin)
-  {
-    let result = ((data.shopping_flags && data.shopping_flags.length > 0)
-      || data.buyable_product) || hasPriceTagIcon(pin);
+    let result = (data.shopping_flags && data.shopping_flags.length > 0)
+      || data.buyable_product;
     if (result) {
       debugLog("--- removed COMMERCE pin:",
-        data.domain || "unknown domain",
+        data.domain,
         data.buyable_product ? "(buyable)" : "");
     }
     return result;
@@ -163,7 +143,7 @@
   {
     let data = getPinData(pin);
     if (!data) return false;
-    if (isCommercePin(data, pin) || isPromotedPin(data, pin) || isIdeaPin(data) ) {
+    if (isPromotedPin(data, pin) || isIdeaPin(data) ) {
       return true;
     }
   }
@@ -204,6 +184,14 @@
 
   function searchAndDestroy()
   {
+		var i, elements = document.querySelectorAll('body *');
+		//remove sticky bar.
+		for (i = 0; i < elements.length; i++) {
+			if (getComputedStyle(elements[i]).position === 'sticky') {
+				elements[i].parentNode.removeChild(elements[i]);
+			}
+		}
+
     debugLog(">>> searching and destroying");
     const grid = findGrid();
     if (grid) {
