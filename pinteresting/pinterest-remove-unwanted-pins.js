@@ -6,7 +6,7 @@
 // @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/$/
 // @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/(categories|pin|discover)/.*$/
 // @include     /^https?://(www|[a-z]{2})\.pinterest\.(com|se)/search/pins/.*$/
-// @version     0.4.3
+// @version     0.4.8
 // @grant       none
 // @compatible  firefox Firefox with GreaseMonkey
 // @compatible  chrome Chrome with TamperMonkey
@@ -42,6 +42,21 @@ function debugLog()
     }
 }
 
+/* https://jsperf.com/startswith2/32 */
+function startsWith(needle, haystack)
+{
+    "use strict";
+    for (var i = 0, currentChar; i < needle.length; i++)
+    {
+        currentChar = haystack[i];
+        if (needle[i] !== haystack[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 function testCreditName(pinBaseNode)
 {
     "use strict";
@@ -49,13 +64,31 @@ function testCreditName(pinBaseNode)
     if (node)
     {
         var text = node.textContent.toLowerCase();
-        if (text.indexOf("promoted by") !== -1)
+        if (startsWith("promoted by", text) ||
+            startsWith("ideas for you", text))
         {
             return true;
         }
     }
     return false;
 }
+
+function testCreditItem(pinBaseNode)
+{
+    "use strict";
+    var node = pinBaseNode.querySelector(".creditItem");
+    if (node)
+    {
+        var text = node.textContent.toLowerCase();
+        if (startsWith("promoted by", text) ||
+            startsWith("ideas for you", text))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 function testCreditFooter(pinBaseNode)
 {
@@ -64,7 +97,8 @@ function testCreditFooter(pinBaseNode)
     if (node)
     {
         var text = node.textContent.toLowerCase();
-        if (text.indexOf("ideas for you") !== -1)
+        if (startsWith("ideas for you", text) ||
+            startsWith("topics for you", text))
         {
             return true;
         }
@@ -76,14 +110,48 @@ function testPinMetaWrapper(pinBaseNode)
 {
     "use strict";
     var node = pinBaseNode.querySelector(".pinMetaWrapper");
+    var text = "";
     if (node)
     {
-        var text = node.textContent;
+        text = node.textContent;
         // search for dollar sign (commerce pin)
         if (text.indexOf("$") !== -1)
         {
             return true;
         }
+
+        // also check sibling of .pinMeta
+        var pinMetaSibNode = node.querySelector(".pinMeta + div");
+        if (pinMetaSibNode)
+        {
+            text = pinMetaSibNode.textContent;
+            if (text.startsWith("Ad"))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function testVideo(pinBaseNode)
+{
+    "use strict";
+    var node = pinBaseNode.querySelector(".playIndicatorPill");
+    if (node)
+    {
+        return true;
+    }
+    return false;
+}
+
+function testCarousel(pinBaseNode)
+{
+    "use strict";
+    var node = pinBaseNode.querySelector(".ExploreCarouselRep");
+    if (node)
+    {
+        return true;
     }
     return false;
 }
@@ -91,7 +159,12 @@ function testPinMetaWrapper(pinBaseNode)
 function modifyBadPin(pin)
 {
     "use strict";
-    var testFn = [testCreditName, testCreditFooter, testPinMetaWrapper];
+    var testFn = [testCreditName,
+                  testCreditItem,
+                  testCreditFooter,
+                  testPinMetaWrapper,
+                  testVideo,
+                  testCarousel];
 
     // call all functions in testFn array to test for bad pins
     for (var i = 0; i < testFn.length; ++i)
@@ -114,7 +187,7 @@ function findGrid()
 
     // Check for one of those random named grids, by finding the last
     // .Pin.Module and then walking backwards to find the closest
-    // item attribute, and then its parent
+    // data-grid-item attribute, and then its parent
     var lastPin = null;
     // TODO: don't use document as base node.  add function param?
     var x = document.querySelectorAll(".Pin.Module:not(.detailed)");
@@ -122,10 +195,10 @@ function findGrid()
     {
         lastPin = x[x.length - 1];  // last pin because there can be multiple grids, and we want the last grid
         debugLog("::: Found last .Pin.Module (%d) %o", x.length, lastPin);
-        var y = lastPin.closest(".item");
+        var y = lastPin.closest("[data-grid-item]");
         if (y)
         {
-            debugLog("::: Found closest item", y);
+            debugLog("::: Found closest data-grid-item", y);
             var gridItemParent = y.parentNode;
             if (gridItemParent)
             {
@@ -135,7 +208,7 @@ function findGrid()
         }
         else
         {
-            debugLog("!!! Can't find closest item");
+            debugLog("!!! Can't find closest data-grid-item");
         }
     }
     else
@@ -153,7 +226,8 @@ function searchAndDestroy()
     if (grid)
     {
         // debugLog(grid);
-        var gridItems = grid.querySelectorAll(".item");
+        // var gridItems = grid.querySelectorAll(".item");
+        var gridItems = grid.querySelectorAll("[data-grid-item]");
         // if (!gridItems.length)
         // {
         //     gridItems = grid.querySelectorAll(".absolute");
@@ -192,7 +266,9 @@ function createObserver(target, callbackFunction, rules)
         return result.trim();
     }
 
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+    var MutationObserver = window.MutationObserver ||
+                           window.WebKitMutationObserver ||
+                           window.MozMutationObserver;
     var targetElement;
     var selector = "dynamic grid";
     if (typeof target === "string")
@@ -223,12 +299,14 @@ if (DEBUGGING)
 {
     window.addEventListener("keydown", function (event) {
         'use strict';
-        if (event.defaultPrevented || /(input|textarea)/i.test(document.activeElement.nodeName)) { return; }
+        if (event.defaultPrevented ||
+            /(input|textarea)/i.test(document.activeElement.nodeName)) { return; }
         switch (event.key) {
             case "s":
             /* fall through */
             case "S":
-                debugLog("%cSearch and destroy!", "color: #fff; background-color: #600; font-weight: bold; display: block;");
+                debugLog("%cSearch and destroy!",
+                         "color: #fff; background-color: #600; font-weight: bold; display: block;");
                 searchAndDestroy();
                 break;
             default:
