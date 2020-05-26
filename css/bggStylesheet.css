@@ -1,0 +1,66 @@
+/* potential source: https://boardgamegeek.com/article/15932047#15932047
+
+div.article, dl, dd.left, dd.right, dd.right div {
+    background-color:white !important;
+    font-size:14px;
+}
+
+div.article div.quotetitle {
+    background-color: #555 !important;
+}
+
+ */
+
+div.article, dl, dd.left, dd.right, dd.right div {
+    background-color:#F5FFF5 !important;
+}
+
+div.article div.quotetitle {
+    background-color: thistle !important;
+}
+
+div.article div.quote {
+    background-color: #FFF0FF !important;
+}
+
+div.article div.quote div.quotetitle,
+div.geeklist_title,
+div.geeklist_item_title {
+    background-color: #BFD8BF !important;
+}
+
+div.article div.quote div.quote {
+    background-color: honeydew !important;
+}
+
+div.article div.quote div.quote div.quotetitle {
+    background-color: thistle !important;
+}
+
+div.article div.quote div.quote div.quote {
+    background-color: #FFF0FF !important;
+}
+
+div.article div.quote div.quote div.quote div.quotetitle {
+    background-color: #BFD8BF !important;
+}
+
+div.article div.quote div.quote div.quote div.quote {
+    background-color: honeydew !important;
+}
+
+
+div.recommend_block dl.recommend,
+div.recommend_block dl.recommend dt {
+    background-color: transparent !important;
+}
+
+/* actually for craislist */
+
+#map {pointer-events: none!important;}
+
+/* actually for reddit */
+
+div.promoted.promotedlink {
+    display:none;
+}
