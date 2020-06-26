@@ -64,3 +64,13 @@ div.recommend_block dl.recommend dt {
 div.promoted.promotedlink {
     display:none;
 }
+
+#redesign-beta-optin-btn {
+    display:none;
+}
+
+/* tabletopia */
+
+#buy-subscription-all-dlgs {
+    display:none;
+}
