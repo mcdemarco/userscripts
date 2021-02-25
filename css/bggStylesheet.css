@@ -61,7 +61,8 @@ div.recommend_block dl.recommend dt {
 
 /* actually for reddit */
 
-div.promoted.promotedlink {
+div.promoted.promotedlink,
+div.promotedlink.promotedlink {
     display:none;
 }
 
@@ -73,4 +74,49 @@ div.promoted.promotedlink {
 
 #buy-subscription-all-dlgs {
     display:none;
+}
+
+/* internet archive */
+
+.lendable-book-read #IABookReaderMessageWrapper,
+#BRMobileMenu #topnav,
+#BookReader .BRtoolbar {
+    display:none!important;
+}
+
+/* substack: https://www.reddit.com/r/slatestarcodex/comments/l6pj7i/acx_tweaks_making_substack_more_like_ssc_one_css/gl3ze5v/ */
+
+/* Fixes the header to the top of the page */
+
+div#entry > div#main .main-menu-content {
+    position: relative !important;
+    top: 0 !important;
+}
+
+div#entry > div#main .main-menu .backdrop {
+    position: fixed !important;
+}
+
+div#entry > div#main .topbar-replacement {
+    display: none;
+}
+
+div#entry > div#main .comment .comment-anchor {
+    top: 0 !important;
+}
+
+/* Hides reactions */
+
+div#entry > div#main .comment-actions span:first-child {
+    display: none;
+}
+
+div#entry > div#main .comment-actions span:nth-child(2) {
+    margin-left: 0 !important;
+}
+
+/* Makes ACX look like the old SSC [only a fragment] */
+
+div#entry > div#main {
+    -webkit-font-smoothing: auto !important;
 }
