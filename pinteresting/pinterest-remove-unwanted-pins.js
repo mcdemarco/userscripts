@@ -35,7 +35,7 @@
   const badRecommendation = [
     "INTENTIONAL_DISTRIBUTION_TOPICS_STORY_PINS", // story
     "INTENTIONAL_DISTRIBUTION_TOPICS_VIDEO", // some videos ads
-    "GRAPHSAGE_PRODUCT_PINS", // product pins
+    //"GRAPHSAGE_PRODUCT_PINS", // product pins
     //"GEMINI_INTERESTS_FRESH", // often ad-like, but unsure about enabling
     //"FRESH_TEXT_EMBEDDINGS",
   ];
