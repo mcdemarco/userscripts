@@ -64,6 +64,7 @@
   appendStyle(`
 .${hidePinClass} { display: none !important; }
 .dbg { outline: 2px dashed red; opacity: 0.2; }
+div[data-test-id="search-tab-bar"] { display: none !important; }
 `);
 
   const debugLog = DEBUGGING ? console.log.bind(console, "[unwanted]") : function() {};
