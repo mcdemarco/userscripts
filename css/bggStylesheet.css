@@ -120,3 +120,20 @@ div#entry > div#main .comment-actions span:nth-child(2) {
 div#entry > div#main {
     -webkit-font-smoothing: auto !important;
 }
+
+/* make textilla printable */
+@media print {
+    body.page-node-type-project header.site-header,
+    body.page-node-type-project div.site-nav,
+    body.page-node-type-project nav.page-content-navigation,
+    body.page-node-type-project div.comments-page-link,
+    body.page-node-type-project div.sharing-links,
+    body.page-node-type-project footer,
+    body.user-logged-in footer.site-page-bottom {
+	display:none !important;
+    }
+}
+
+body.user-logged-in footer.site-page-bottom {
+    display:none;
+}
