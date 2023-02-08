@@ -55,6 +55,82 @@ div.recommend_block dl.recommend dt {
     background-color: transparent !important;
 }
 
+/* only way to remove focus using css */
+input.pagination-nav__input {
+    display: none;
+}
+
+/* geeklists */
+/* Heiko made this 2022. Until 2042, you may use it, unless you earn money with that use. After that, you may also make money off it. Not that I assume anyone could. Just so it has been said. Let’s call it copyright. */
+/* limiting the main content width to something useable  */
+.global-body-content { 
+    max-width: 800px !important; 
+    /*margin: auto;*/
+}
+/* stripping the main content of its single large white blanket background */
+.global-body-content-primary > gg-geeklist-page { 
+    background-color: initial !important; 
+    padding: 0 !important;
+}
+/* giving each entry their own background box, adjusting margins */
+.global-body-content-primary > header , gg-geeklist-item-ui > div {
+    background-color: white;
+    padding: 1em;
+    border-radius: 4px;
+    margin-bottom: 1.5em;
+}
+/* cleaning up the GL header bottom information bar */
+.global-body-content-primary nav {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+/* making the titles stand out */
+h2 {
+    color: #004aa4;
+}
+.geeklist__header-avatar , .geeklist-item__author {
+    padding-bottom: 0.5em;
+    border-bottom: silver solid 1px;
+    margin-bottom: 0.5em !important;
+}
+/* cleaning up the GL item comment section */
+gg-geeklist-item gg-comments-block > div {
+    padding: 1em 1em 0.5em 1em;
+    margin: 0 -2em -2em ;
+    background-image: linear-gradient(rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.02) 200px);
+    background-color: #ecedee;
+} 
+gg-post article {
+    background-color: #fff;
+}  
+/* de-junking the GL item bottom info box */
+nav.geeklist-item__divider {
+    background-color: white !important;
+    border: none;
+    padding: 0 !important;
+} 
+.geeklist-item__divider::before , .geeklist-item__divider::after {
+  height: 0 !important;
+  background-color: var(--gray-400);
+}
+/* shrinking the "reply box" and the "view X older posts" stuff */
+gg-comments-block gg-post-form-expandable > form > div {
+    padding: 0 !important;
+    background-color: rgba(0,0,0,0);
+    border: none;
+}
+gg-comments-block > div > div > div.tw-relative {
+    margin: 0 !important;
+}
+gg-comments-block > div > div > div button.tw-relative {
+    padding: 0 !important;
+    background-color: initial !important;
+}
+/* In a non-surprising total hack, margins between elements are not set in CSS but via hardcoded breaks, probably taken literally from the input form. WTF. */
+
+
+
 /* actually for craislist */
 
 #map {pointer-events: none!important;}
@@ -135,5 +211,15 @@ div#entry > div#main {
 }
 
 body.user-logged-in footer.site-page-bottom {
+    display:none;
+}
+
+/* twitter */
+
+div.css-1dbjc4n.r-j5o65s.r-qklmqi.r-1adg3ll.r-1ny4l3l  {display:none!important} /* promoted */
+
+/* google */
+
+#google_one_tap_parent {
     display:none;
 }
