@@ -129,7 +129,9 @@ gg-comments-block > div > div > div button.tw-relative {
 }
 /* In a non-surprising total hack, margins between elements are not set in CSS but via hardcoded breaks, probably taken literally from the input form. WTF. */
 
-
+gg-forum-sidebar {
+    display: none;
+}
 
 /* actually for craislist */
 
@@ -220,7 +222,45 @@ div.css-1dbjc4n.r-j5o65s.r-qklmqi.r-1adg3ll.r-1ny4l3l  {display:none!important} 
 */
 
 /* google */
+/*div#credential_picker_container,
+div#credential_picker_container iframe,
+div#credentials-picker-container {
+    display:none!important;
+    visibility:hidden!important;
+    z-index:-9999!important;
+    height:0!important;
+    width:0!important;
+}
+
+div#credential_picker_container > iframe[src^="https://accounts.google.com/gsi/iframe"], 
+iframe[src^="https://accounts.google.com/gsi/iframe"] {
+    display: none !important;
+}*/
 
 #google_one_tap_parent {
     display:none;
+}
+
+/* medium */
+
+mark.rv, 
+mark.rz, 
+mark.zb,
+p mark {
+    background-color: inherit!important;
+}
+
+/* https://cs.uwaterloo.ca/~csk/hat/app.html
+
+main { filter: saturate(7) grayscale(10) contrast(3); }
+
+*/
+
+/* fandom wiki (mancala) */
+
+div.notifications-placeholder,
+div.top-ads-container,
+div.global-navigation,
+div#WikiaBar {
+    display: none!important;
 }
