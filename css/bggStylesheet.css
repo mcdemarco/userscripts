@@ -261,6 +261,36 @@ main { filter: saturate(7) grayscale(10) contrast(3); }
 div.notifications-placeholder,
 div.top-ads-container,
 div.global-navigation,
-div#WikiaBar {
+div#WikiaBar,
+aside.page__right-rail {
     display: none!important;
 }
+
+/* brickset */
+
+dl.highlight {font-size: larger;}
+
+/* the spruce */
+
+div.mntl-jwplayer-broad {display: none!important;}
+
+/* taste of home */
+
+cnx {display: none!important;}
+
+/* ddg */
+
+div.header--aside__item.header--aside__item--hidden-lg {display: none!important;}
+
+/* so cookie banner */
+
+div#onetrust-banner-sdk {display: none!important;}
+
+/* engtips bad and tall headers, don't collide by matching
+   <meta name="dcterms.rightsHolder" content="Engineering.com, Inc. 1998-2024">
+ */
+
+head:has(meta[name="dcterms.rightsHolder"][content="Engineering.com, Inc. 1998-2024"]) + body div#topnav.member {display: none;}
+
+head:has(meta[name="dcterms.rightsHolder"][content="Engineering.com, Inc. 1998-2024"]) + body div#masthead {height: 15px!important;}
+
