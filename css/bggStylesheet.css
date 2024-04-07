@@ -11,7 +11,7 @@ div.article div.quotetitle {
 
  */
 
-div.article, dl, dd.left, dd.right, dd.right div {
+div.article, /*dl,*/ dd.left, dd.right, dd.right div {
     background-color:#F5FFF5 !important;
 }
 
@@ -85,8 +85,8 @@ input.pagination-nav__input {
     border-bottom: none !important;
     padding-bottom: 0 !important;
 }
-/* making the titles stand out */
-h2 {
+/* making the titles stand out; was hitting all titles so edited */
+.global-body-content-primary h2 {
     color: #004aa4;
 }
 .geeklist__header-avatar , .geeklist-item__author {
@@ -132,6 +132,20 @@ gg-comments-block > div > div > div button.tw-relative {
 gg-forum-sidebar {
     display: none;
 }
+
+/* sleeves, and discovered this attribute; the other options weren't too annoying but maybe leaderboard at some point */
+
+div[hide-ad-block='blocksleevesad'] {display:none!important;}
+
+
+
+
+
+/* END BGG */
+
+
+
+
 
 /* actually for craislist */
 
