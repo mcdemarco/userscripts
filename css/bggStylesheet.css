@@ -147,9 +147,11 @@ div[hide-ad-block='blocksleevesad'] {display:none!important;}
 
 
 
-/* actually for craislist */
+/* actually for craislist 
 
 #map {pointer-events: none!important;}
+
+*/
 
 /* actually for reddit */
 
@@ -304,11 +306,15 @@ div#onetrust-banner-sdk {display: none!important;}
 
 /* engtips bad and tall headers, don't collide by matching
    <meta name="dcterms.rightsHolder" content="Engineering.com, Inc. 1998-2024">
- */
 
 head:has(meta[name="dcterms.rightsHolder"][content="Engineering.com, Inc. 1998-2024"]) + body div#topnav.member {display: none;}
 
 head:has(meta[name="dcterms.rightsHolder"][content="Engineering.com, Inc. 1998-2024"]) + body div#masthead {height: 15px!important;}
+ */
+
+/* engtips forum changed */
+
+div[data-widget-key="xfes_thread_view_below_quick_reply_similar_threads"] {display: none;}
 
 /* pagat */
 
@@ -331,3 +337,16 @@ div[data-slot-rendered-universalplayer] {display: none!important;}
 /* primis */
 
 div#primisPlayerContainerDiv {display: none!important;}
+
+/* bga */
+
+span#pagemaintitletext span.playername {
+    text-shadow: #000 0px 0px 1px, #000 0px 0px 1px, #000 0px 0px 1px;
+    font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* misc */
+
+ins.adsbygoogle,
+div.DesktopStickyFooter {display: none!important;}
