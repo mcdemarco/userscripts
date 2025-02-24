@@ -137,9 +137,11 @@ gg-forum-sidebar {
 
 div[hide-ad-block='blocksleevesad'] {display:none!important;}
 
+/* ads */
+div.game-marketplace-ad.advertisement {visibility: hidden;} 
 
-
-
+gg-post-inline-ad,
+gg-leaderboard-ad {display:none!important;}
 
 /* END BGG */
 
@@ -349,4 +351,6 @@ span#pagemaintitletext span.playername {
 /* misc */
 
 ins.adsbygoogle,
-div.DesktopStickyFooter {display: none!important;}
+div.DesktopStickyFooter,
+ins[data-google-query-id],
+div:has(> div > div.fuse-slot-sticky) {display: none!important;}
